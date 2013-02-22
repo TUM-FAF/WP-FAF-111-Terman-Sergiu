@@ -232,7 +232,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     char buffer[255] = "";
 
                     switch(foodNumber){
-                    case 0:
+                    case 0:http://pastebin.com/62fGU90U
                     case 1:
                     case 2:
                     case 3:
@@ -244,7 +244,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                         strcat(buffer, "I see you are hungry now");
                         break;
                     default:
-                        strcat(buffer, "You are starvin... go get someting to eat");
+                        strcat(buffer, "You are starvin... go get something to eat");
                         break;
                     }
                     MessageBox(NULL,
@@ -268,6 +268,22 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
             MoveWindow(hShowFoodInput, 10, 40, nWidth - 18, 100, TRUE);
             MoveWindow(hAddFood, 120, 150, nWidth - 128, 25, TRUE);
+        }
+        break;
+
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO * mmiStruct;
+			mmiStruct = (MINMAXINFO*)lParam;
+
+			POINT ptPoint;
+
+			ptPoint.x = 335;    //Minimum width of the window.
+			ptPoint.y = 260;    //Minimum height of the window.
+			mmiStruct->ptMinTrackSize = ptPoint;
+
+			ptPoint.x = GetSystemMetrics(SM_CXMAXIMIZED);   //Maximum width of the window.
+			ptPoint.y = GetSystemMetrics(SM_CYMAXIMIZED);   //Maximum height of the window.
+			mmiStruct->ptMaxTrackSize = ptPoint;
         }
         break;
 
