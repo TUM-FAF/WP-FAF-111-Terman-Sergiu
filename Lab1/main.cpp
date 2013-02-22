@@ -228,7 +228,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
 		case WM_COMMAND: {
             switch(LOWORD(wParam)) {
-                case BUTTON_ADD_FOOD:{
+                case BUTTON_ADD_FOOD: {
 
                     char buffer[256];
                     SendMessage(hInputFood,
@@ -237,8 +237,14 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                         reinterpret_cast<LPARAM>(buffer));
 
                     if(strlen(buffer) > 0){
-                        strcat(buffer, "\r\n");
-                        SendMessage(hFoodList, EM_REPLACESEL, FALSE, (LPARAM)buffer);
+                        char newInput[255] = "";
+                        char stat[30];
+                        strcat(newInput, itoa((foodNumber+1), stat, 10) );
+                        strcat(newInput, " ) ");
+                        strcat(newInput, buffer);
+                        strcat(newInput, "\r\n");
+
+                        SendMessage(hFoodList, EM_REPLACESEL, FALSE, (LPARAM)newInput);
                         SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
                         foodNumber++;
                         InvalidateRect(hWnd, &updateRect, TRUE);
@@ -246,8 +252,33 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
                 }
                 break;
-            }
 
+                case BUTTON_DISPLAY_FOOD_NR: {
+                    char buffer[255] = "";
+
+                    switch(foodNumber){
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                        strcat(buffer, "You are not hungry at all");
+                        break;
+                    case 4:
+                    case 5:
+                    case 6:
+                        strcat(buffer, "I see you are hungry now");
+                        break;
+                    default:
+                        strcat(buffer, "You are starvin... go get someting to eat");
+                        break;
+                    }
+                    MessageBox(NULL,
+                        buffer,
+                        "Funny",
+                        MB_ICONINFORMATION);
+                }
+                break;
+            }
         }
         break;
 
