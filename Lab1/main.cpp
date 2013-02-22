@@ -9,12 +9,13 @@
 HWND hFoodList;
 HWND hInputFood;
 char food[500] = "";
-char firstText[] = "It's just the food list";
+char firstText[] = "Food List : ";
+int foodNumber = 0;
+RECT updateRect;
 
 LRESULT CALLBACK WinProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam);
 
-int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShowCmd)
-{
+int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShowCmd) {
 	WNDCLASSEX wClass;
 	ZeroMemory(&wClass,sizeof(WNDCLASSEX));
 	wClass.cbSize = sizeof(WNDCLASSEX);
@@ -43,7 +44,7 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 			500,
 			200,
 			335,
-			250,
+			260,
 			NULL,
 			NULL,
 			hInst,
@@ -75,11 +76,14 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     PAINTSTRUCT Ps;
 	switch(msg) {
-		case WM_CREATE: {
+    case WM_CREATE: {
 
 		    /**
 		    * Create AddFood Button
             */
+            HFONT hFont = CreateFont(30,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
+                CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
+
             HWND hButtonAddFood = CreateWindowEx(NULL,
                 "BUTTON",
                 "ADD FOOD",
@@ -99,23 +103,24 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
             */
             HWND hShowFoodNumber = CreateWindowEx(NULL,
                 "BUTTON",
-                "OK",
+                "Funny",
                 WS_TABSTOP|WS_VISIBLE|
                 WS_CHILD|BS_DEFPUSHBUTTON|BS_TOP,
                 10,
                 180,
                 300,
-                25,
+                40,
                 hWnd,
                 (HMENU)BUTTON_DISPLAY_FOOD_NR,
                 GetModuleHandle(NULL),
                 NULL);
+            SendMessage (hShowFoodNumber, WM_SETFONT, WPARAM (hFont), TRUE);
 
             /**
             * Draw Food List (In a input box)
             */
 
-            HGDIOBJ hfDefault1 = GetStockObject(DEFAULT_GUI_FONT);
+            /*HGDIOBJ hfDefault1 = GetStockObject(DEFAULT_GUI_FONT);
             HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
                 CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
 
@@ -123,7 +128,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 WM_SETFONT,
                 (WPARAM)hfDefault1,
                 MAKELPARAM(FALSE,0));
-
+            */
             hFoodList = CreateWindowEx(WS_EX_CLIENTEDGE,
                 "EDIT",
                 "",
@@ -138,48 +143,89 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 GetModuleHandle(NULL),
                 NULL);
 
-            SendMessage(hFoodList,
+            /*SendMessage(hFoodList,
                 WM_SETTEXT,INPUT_TEXT_SHOW_FOOD,
-                (LPARAM) food);
+                (LPARAM) food);*/
 
             /**
             * Draw main Input food field
             */
-            hInputFood = CreateWindowEx(WS_EX_CLIENTEDGE,
-                "EDIT",
-                "",
-                WS_CHILD|WS_VISIBLE|
-                ES_AUTOVSCROLL|ES_AUTOHSCROLL,
+
+            hInputFood = CreateWindowEx(
+                (DWORD)NULL,
+                TEXT("edit"),                                                   // The class name required is edit
+                "",                                                             // Default text.
+                WS_VISIBLE | WS_CHILD | WS_BORDER,                              // Textbox styles
                 120,
-                150,
+                150,                                                         // the left and top co-ordinates
                 190,
-                25,
-                hWnd,
-                (HMENU)INPUT_TEXT_ADD_FOOD,
-                GetModuleHandle(NULL),
+                25,                                                        // width and height
+                hWnd,                                                           // parent window handle
+                (HMENU)INPUT_TEXT_ADD_FOOD,                                          // the ID of your editbox
+                GetModuleHandle(NULL),                                                          // the instance of your application
                 NULL);
-            }
-            break;
+        }
+        break;
 
 		case WM_PAINT: {
             HDC hdc = BeginPaint(hWnd, &Ps);
-                /**
-                * Draw Text
-                */
-                RECT rect;
-                HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
-                CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
-                SetRect(&rect, 10, 10, 300, 100);
+            RECT rect;
+            /**
+            * Draw Text
+            */
 
-                SelectObject(hdc, hFont);
-                SetBkMode(hdc, OPAQUE);
-                SetBkColor(hdc, RGB(0,255,255));
-                SetTextColor(hdc, RGB(255,0,0));
-                DrawText(hdc, TEXT(firstText), -1,&rect, DT_NOCLIP);
+            // Second Text
+            char foodNrMessage[256] = "Number : ";
+            char nr[50];
+            strcat(foodNrMessage, itoa(foodNumber, nr, 10));
+            SetBkMode(hdc, TRANSPARENT);
+            SetRect(&updateRect, 210, 10, 300, 30);
+            DrawText( hdc, foodNrMessage, -1, &updateRect, DT_SINGLELINE | DT_NOCLIP  ) ;
 
-                EndPaint(hWnd, &Ps);
+            // First Text
+            HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
+            CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
+            SetRect(&rect, 10, 10, 50, 50);
+
+            SelectObject(hdc, hFont);
+            SetBkMode(hdc, OPAQUE);
+            SetBkColor(hdc, RGB(0,255,255));
+            SetTextColor(hdc, RGB(255,0,0));
+            DrawText(hdc, TEXT(firstText), -1,&rect, DT_NOCLIP);
+
+            EndPaint(hWnd, &Ps);
+        }
+        break;
+
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            HWND hwnd = (HWND)lParam;
+            HBRUSH color;
+
+            if (GetDlgCtrlID(hwnd) == INPUT_TEXT_ADD_FOOD) {
+                color = CreateSolidBrush(RGB(225, 225, 225));
+                SetTextColor(hdc, RGB(0, 0, 255));                            // Text color
+                SetBkMode(hdc, TRANSPARENT);                                // EditBox Backround Mode
+                SetBkColor(hdc,(LONG)color);
             }
-            break;
+            return (LONG) color;
+        }
+        break;
+
+        case WM_CTLCOLORBTN: {
+            HDC hdc = (HDC)wParam;
+            HWND hwnd = (HWND)lParam;
+            HBRUSH color;
+
+            if (GetDlgCtrlID(hwnd) == BUTTON_DISPLAY_FOOD_NR) {
+                color = CreateSolidBrush(RGB(225, 225, 225));
+                SetTextColor(hdc, RGB(0, 0, 255));                            // Text color
+                SetBkMode(hdc, TRANSPARENT);                                // EditBox Backround Mode
+                SetBkColor(hdc,(LONG)color);
+                return (LRESULT) color;
+            }
+        }
+
 		case WM_COMMAND: {
             switch(LOWORD(wParam)) {
                 case BUTTON_ADD_FOOD:{
@@ -191,21 +237,21 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                         reinterpret_cast<LPARAM>(buffer));
 
                     if(strlen(buffer) > 0){
-                        //strcat(food, buffer);
                         strcat(buffer, "\r\n");
                         SendMessage(hFoodList, EM_REPLACESEL, FALSE, (LPARAM)buffer);
                         SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
+                        foodNumber++;
+                        InvalidateRect(hWnd, &updateRect, TRUE);
                     }
 
-                    }
-                    break;
+                }
+                break;
             }
 
-			}
-			break;
+        }
+        break;
 
-		case WM_DESTROY:
-		{
+		case WM_DESTROY: {
 			PostQuitMessage(0);
 			return 0;
 		}
