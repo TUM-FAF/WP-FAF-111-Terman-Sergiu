@@ -9,6 +9,7 @@
 HWND hFoodList;
 HWND hInputFood;
 char food[500] = "";
+char firstText[] = "It's just the food list";
 
 LRESULT CALLBACK WinProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam);
 
@@ -16,19 +17,18 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 {
 	WNDCLASSEX wClass;
 	ZeroMemory(&wClass,sizeof(WNDCLASSEX));
-	wClass.cbSize=sizeof(WNDCLASSEX);
-	wClass.hbrBackground=(HBRUSH)COLOR_WINDOW;
-	wClass.hCursor=LoadCursor(NULL,IDC_ARROW);
-	wClass.hIcon=NULL;
-	wClass.hIconSm=NULL;
-	wClass.hInstance=hInst;
-	wClass.lpfnWndProc=(WNDPROC)WinProc;
-	wClass.lpszClassName="Window Class";
-	wClass.lpszMenuName=NULL;
-	wClass.style=CS_HREDRAW|CS_VREDRAW;
+	wClass.cbSize = sizeof(WNDCLASSEX);
+	wClass.hbrBackground = (HBRUSH)COLOR_WINDOW;
+	wClass.hCursor = LoadCursor(NULL,IDC_ARROW);
+	wClass.hIcon = NULL;
+	wClass.hIconSm = NULL;
+	wClass.hInstance = hInst;
+	wClass.lpfnWndProc = (WNDPROC)WinProc;
+	wClass.lpszClassName = "Window Class";
+	wClass.lpszMenuName = NULL;
+	wClass.style = CS_HREDRAW|CS_VREDRAW;
 
-	if(!RegisterClassEx(&wClass))
-	{
+	if (!RegisterClassEx(&wClass)) {
 		int nResult=GetLastError();
 		MessageBox(NULL,
 			"Window class creation failed\r\n",
@@ -43,14 +43,13 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 			500,
 			200,
 			335,
-			218,
+			250,
 			NULL,
 			NULL,
 			hInst,
 			NULL);
 
-	if(!hWnd)
-	{
+	if(!hWnd) {
 		int nResult=GetLastError();
 
 		MessageBox(NULL,
@@ -64,8 +63,7 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 	MSG msg;
 	ZeroMemory(&msg,sizeof(MSG));
 
-	while(GetMessage(&msg,NULL,0,0))
-	{
+	while(GetMessage(&msg,NULL,0,0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -74,19 +72,21 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 }
 
 
-LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
-{
+LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     PAINTSTRUCT Ps;
-	switch(msg)
-	{
+	switch(msg) {
 		case WM_CREATE: {
+
+		    /**
+		    * Create AddFood Button
+            */
             HWND hButtonAddFood = CreateWindowEx(NULL,
                 "BUTTON",
                 "ADD FOOD",
                 WS_TABSTOP|WS_VISIBLE|
                 WS_CHILD|BS_DEFPUSHBUTTON|BS_TOP,
                 10,
-                120,
+                150,
                 100,
                 25,
                 hWnd,
@@ -94,13 +94,16 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
                 GetModuleHandle(NULL),
                 NULL);
 
+            /**
+            * Create button ShowFoodNumber
+            */
             HWND hShowFoodNumber = CreateWindowEx(NULL,
                 "BUTTON",
                 "OK",
                 WS_TABSTOP|WS_VISIBLE|
                 WS_CHILD|BS_DEFPUSHBUTTON|BS_TOP,
                 10,
-                150,
+                180,
                 300,
                 25,
                 hWnd,
@@ -109,10 +112,12 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
                 NULL);
 
             /**
-            * Drawing Input
+            * Draw Food List (In a input box)
             */
 
             HGDIOBJ hfDefault1 = GetStockObject(DEFAULT_GUI_FONT);
+            HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
+                CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
 
             SendMessage(hFoodList,
                 WM_SETFONT,
@@ -122,10 +127,10 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
             hFoodList = CreateWindowEx(WS_EX_CLIENTEDGE,
                 "EDIT",
                 "",
-                WS_CHILD|WS_VISIBLE|
-                ES_MULTILINE|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
+                WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_READONLY|
+                ES_MULTILINE,
                 10,
-                10,
+                40,
                 300,
                 100,
                 hWnd,
@@ -137,14 +142,16 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
                 WM_SETTEXT,INPUT_TEXT_SHOW_FOOD,
                 (LPARAM) food);
 
-
+            /**
+            * Draw main Input food field
+            */
             hInputFood = CreateWindowEx(WS_EX_CLIENTEDGE,
                 "EDIT",
                 "",
                 WS_CHILD|WS_VISIBLE|
-                ES_MULTILINE|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
+                ES_AUTOVSCROLL|ES_AUTOHSCROLL,
                 120,
-                120,
+                150,
                 190,
                 25,
                 hWnd,
@@ -155,15 +162,69 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
             break;
 
 		case WM_PAINT: {
-                HDC hdc = BeginPaint(hWnd, &Ps);
-                //RECT rect;
+            HDC hdc = BeginPaint(hWnd, &Ps);
+                /**
+                * Draw Text
+                */
+                RECT rect;
+                HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
+                CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
+                SetRect(&rect, 10, 10, 300, 100);
+
+                SelectObject(hdc, hFont);
+                SetBkMode(hdc, OPAQUE);
+                SetBkColor(hdc, RGB(0,255,255));
+                SetTextColor(hdc, RGB(255,0,0));
+                DrawText(hdc, TEXT(firstText), -1,&rect, DT_NOCLIP);
+
+                EndPaint(hWnd, &Ps);
+            }
+            break;
+		case WM_COMMAND: {
+            switch(LOWORD(wParam)) {
+                case BUTTON_ADD_FOOD:{
+
+                    char buffer[256];
+                    SendMessage(hInputFood,
+                        WM_GETTEXT,
+                        sizeof(buffer)/sizeof(buffer[0]),
+                        reinterpret_cast<LPARAM>(buffer));
+
+                    if(strlen(buffer) > 0){
+                        //strcat(food, buffer);
+                        strcat(buffer, "\r\n");
+                        SendMessage(hFoodList, EM_REPLACESEL, FALSE, (LPARAM)buffer);
+                        SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
+                    }
+
+                    }
+                    break;
+            }
+
+			}
+			break;
+
+		case WM_DESTROY:
+		{
+			PostQuitMessage(0);
+			return 0;
+		}
+		break;
+	}
+
+	return DefWindowProc(hWnd,msg,wParam,lParam);
+}
+
+
+
+//RECT rect;
                 /**
                 * Drawing Buttons
                 */
 
 
 
-/*
+                /*
                 BeginPaint(hWnd, &Ps);
                 SetRect(&rect, 50, 50,700,200);
                 DrawText(hdc, TEXT("Drawing Text with Impact"), -1,&rect, DT_NOCLIP);
@@ -177,7 +238,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
                 SetBkColor(hdc, RGB(0,255,255));
                 SetTextColor(hdc, RGB(255,0,0));
                 DrawText(hdc, TEXT("Drawing Text with Impact"), -1,&rect, DT_NOCLIP);
-*/
+                */
 
                 /*hEdit=CreateWindowEx(WS_EX_CLIENTEDGE,
 				"EDIT",
@@ -220,53 +281,9 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
 			SendMessage(hWndButton,
 				WM_SETFONT,
 				(WPARAM)hfDefault,
-				MAKELPARAM(FALSE,0));
-*/
-            EndPaint(hWnd, &Ps);
-            }
-            break;
-		case WM_COMMAND:
-			switch(LOWORD(wParam))
-            {
-				case BUTTON_ADD_FOOD:
-				{
-
-					char buffer[256];
-					SendMessage(hInputFood,
-						WM_GETTEXT,
-						sizeof(buffer)/sizeof(buffer[0]),
-						reinterpret_cast<LPARAM>(buffer));
-                    if(strlen(buffer) > 0){
-                        strcat(food, buffer);
-                        strcat(food, "\r\n");
-                        SendMessage(hFoodList, WM_SETTEXT, TRUE, (LPARAM)food);
-                        SendMessage(hInputFood, WM_SETTEXT, TRUE, (LPARAM)"");
-                        //SendMessage(hFoodList, EM_REPLACESEL, false, (LPARAM)"hello");
-
-                    }
-
-
-
-					/*MessageBox(NULL,
-						buffer,
-						"Information",
-						MB_ICONINFORMATION);
-*/
-				}
-				break;
-			}
-			break;
-
-		case WM_DESTROY:
-		{
-			PostQuitMessage(0);
-			return 0;
-		}
-		break;
-	}
-
-	return DefWindowProc(hWnd,msg,wParam,lParam);
-}
-
-
-
+				MAKELPARAM(FALSE,0));*/
+ /*MessageBox(NULL,
+                    buffer,
+                    "Information",
+                    MB_ICONINFORMATION);
+                    */
