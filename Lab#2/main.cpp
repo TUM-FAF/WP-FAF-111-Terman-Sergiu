@@ -17,6 +17,8 @@ char food[500] = "";
 char firstText[] = "Food List : ";
 int foodNumber = 0;
 static int scrollColor = 0;
+static int widthScroll = 0;
+static int heightScroll = 40;
 HINSTANCE hInstance;
 
 
@@ -28,7 +30,6 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 
 
     WNDCLASSEX wClass;
-    //ZeroMemory(&wClass,sizeof(WNDCLASSEX));
 
     wClass.hInstance = hInst;
     wClass.lpszClassName = "Window Class";
@@ -37,11 +38,13 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
     wClass.cbSize = sizeof(WNDCLASSEX);
 
 
+
+
     wClass.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
-    wClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wClass.hIcon = NULL;
+    wClass.hCursor = LoadCursor(NULL, IDC_HAND);
     wClass.hIconSm = NULL;
     wClass.lpszMenuName  = MAKEINTRESOURCE(IDR_MYMENU);
+    wClass.hIcon  = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
     //wClass.cbClsExtra = 0;                                                         // No extra bytes after the window class
     //wClass.cbWndExtra = 0;
 
@@ -65,7 +68,7 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
             500,
             200,
             400,
-            300,
+            400,
             NULL,
             hmenu,
             hInst,
@@ -97,22 +100,24 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
 LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     PAINTSTRUCT Ps;
     static HWND hWndList;
-    static HWND hWndScroll;
+    static HWND hWndScroll, hWndWidthScroll, hWndHeightScroll;
     static RECT rcScroll, rcFoodList, rcInputFood, rcQuantity;
     HBRUSH hBrushStatic;
     static int fontColor[3];
 
+
+    SetRect(&rcScroll, 315, 40, 25, 150);
+    SetRect(&rcFoodList, 10, 10, 100, 40);
+    SetRect(&rcInputFood, 120, 150, 190, 25);
+    SetRect(&rcQuantity, 210, 10, 300, 30);
+    for (int i = 0; i < 3; i++) {
+        fontColor[i] = 0;
+    }
+
     switch(msg) {
     case WM_CREATE: {
 
-                SetRect(&rcScroll, 315, 40, 25, 150);
-                SetRect(&rcFoodList, 10, 10, 100, 40);
-                SetRect(&rcInputFood, 120, 150, 190, 25);
-                SetRect(&rcQuantity, 210, 10, 300, 30);
-                for (int i = 0; i < 3; i++) {
-                    fontColor[i] = 0;
-                }
-
+                //Create Scrolls
                 hWndScroll = CreateWindowEx((DWORD)NULL,
                     TEXT("scrollbar"),
                     NULL,
@@ -122,11 +127,33 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     (HMENU) ID_SCROLL_BAR,
                     hInstance,
                     NULL);
-
                 SetScrollRange(hWndScroll,SB_CTL, 0, 255, FALSE);
-                SetScrollPos(hWndScroll, SB_CTL, scrollColor, TRUE);
+                SetScrollPos(hWndScroll, SB_CTL, 0, TRUE);
 
-                //OldScroll = (WNDPROC) SetWindowLong(hWndSCroll, GWL_WNDPROC, (LONG) ScrollProc);
+                hWndWidthScroll = CreateWindowEx((DWORD)NULL,
+                    TEXT("scrollbar"),
+                    NULL,
+                    WS_CHILD | WS_VISIBLE | SBS_HORZ,
+                    10, 230, 300, 20,
+                    hWnd,
+                    (HMENU)ID_WIDTH_SCROLL,
+                    hInstance,
+                    NULL);
+                SetScrollRange(hWndWidthScroll, SB_CTL, 0, 100, TRUE);
+                SetScrollPos(hWndWidthScroll, SB_CTL, 0, TRUE);
+
+                hWndHeightScroll = CreateWindowEx((DWORD)NULL,
+                    TEXT("scrollbar"),
+                    NULL,
+                    WS_CHILD | WS_VISIBLE | SBS_HORZ,
+                    10, 260, 300, 20,
+                    hWnd,
+                    (HMENU)ID_HEIGHT_SCROLL,
+                    hInstance,
+                    NULL);
+                SetScrollRange(hWndHeightScroll, SB_CTL, 0, 100, TRUE);
+                SetScrollPos(hWndHeightScroll, SB_CTL, 45, TRUE);
+
                 /**
                 * Create ListBox
                 */
@@ -335,7 +362,6 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 if (HIWORD(wParam) == LBN_DBLCLK) {
                     int index = SendMessage(hWndList, LB_GETCURSEL, 0, 0);
                     SendMessage(hWndList, LB_DELETESTRING, (WPARAM)index, 0);
-                    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
                     foodNumber--;
                     InvalidateRect(hWnd, &rcQuantity, TRUE);
                 }
@@ -397,6 +423,55 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
         }
         break;
 
+    case WM_HSCROLL: {
+            RECT rect;
+            GetWindowRect(hWnd, &rect);
+            int iSysWidth = GetSystemMetrics(SM_CXSCREEN);
+            int iSysHeight = GetSystemMetrics(SM_CYSCREEN);
+            int iWinWidth = rect.right - rect.left;
+            int iWinHeight = rect.bottom - rect.top;
+
+            switch (GetWindowLong((HWND)lParam, GWL_ID)) {
+            case ID_WIDTH_SCROLL: {
+                    switch(LOWORD(wParam)) {
+                    case SB_LINELEFT:
+                        widthScroll -= 1;
+                        break;
+                    case SB_LINERIGHT:
+                        widthScroll += 1;
+                        break;
+                    case SB_THUMBPOSITION:
+                        widthScroll = HIWORD(wParam);
+                        break;
+                    default:
+                        break;
+                    }
+                    SetScrollPos(hWndWidthScroll, SB_CTL, widthScroll, TRUE);
+                    MoveWindow(hWnd, rect.left, rect.top, (widthScroll * iSysWidth / 100), iWinHeight, TRUE);
+                }
+                break;
+            case ID_HEIGHT_SCROLL: {
+                    switch(LOWORD(wParam)) {
+                    case SB_LINELEFT:
+                        widthScroll--;
+                        break;
+                    case SB_LINERIGHT:
+                        widthScroll++;
+                        break;
+                    case SB_THUMBPOSITION:
+                        widthScroll = HIWORD(wParam);
+                        break;
+                    default:
+                        break;
+                    }
+                    SetScrollPos(hWndHeightScroll, SB_CTL, widthScroll, TRUE);
+                    MoveWindow(hWnd, rect.left, rect.top, iWinWidth, (widthScroll * iSysHeight / 100), TRUE);
+                }
+                break;
+            }
+        }
+        break;
+
     case WM_GETMINMAXINFO: {
             MINMAXINFO * mmiStruct;
             mmiStruct = (MINMAXINFO*)lParam;
@@ -442,12 +517,18 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
         }
         break;
 
+    case WM_SETFOCUS: {
+            SetFocus(hWnd);
+        }
+        break;
     case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;
         }
         break;
     }
+
+
 
     return DefWindowProc(hWnd,msg,wParam,lParam);
 }

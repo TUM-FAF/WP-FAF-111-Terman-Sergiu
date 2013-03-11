@@ -1,6 +1,6 @@
 #include "resource.h"
 
-
+IDI_ICON ICON DISCARDABLE "linux_icon.ico"
 IDR_MYMENU MENU
 BEGIN
     POPUP "File"
@@ -20,3 +20,5 @@ BEGIN
         MENUITEM "Blue Font", ID_EVENT_BLUE
     END
 END
+
+

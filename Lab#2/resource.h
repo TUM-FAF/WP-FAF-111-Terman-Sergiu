@@ -13,3 +13,7 @@
 
 
 #define IDC_FOOD_LIST  9007
+
+#define IDI_ICON 9008
+#define ID_WIDTH_SCROLL 9009
+#define ID_HEIGHT_SCROLL 9010
