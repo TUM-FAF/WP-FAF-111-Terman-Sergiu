@@ -8,9 +8,15 @@ BEGIN
         MENUITEM "Exit", ID_FILE_EXIT
     END
 
-    POPUP "Stuff"
+    POPUP "About"
     BEGIN
-        MENUITEM "Go", ID_STUFF_GO
         MENUITEM "About", ID_STUFF_ABOUT
+    END
+
+    POPUP "Event"
+    BEGIN
+        MENUITEM "Red Font", ID_EVENT_RED
+        MENUITEM "Green Font", ID_EVENT_GREEN
+        MENUITEM "Blue Font", ID_EVENT_BLUE
     END
 END

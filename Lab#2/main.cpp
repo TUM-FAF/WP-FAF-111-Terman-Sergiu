@@ -100,6 +100,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     static HWND hWndScroll;
     static RECT rcScroll, rcFoodList, rcInputFood, rcQuantity;
     HBRUSH hBrushStatic;
+    static int fontColor[3];
 
     switch(msg) {
     case WM_CREATE: {
@@ -108,6 +109,9 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 SetRect(&rcFoodList, 10, 10, 100, 40);
                 SetRect(&rcInputFood, 120, 150, 190, 25);
                 SetRect(&rcQuantity, 210, 10, 300, 30);
+                for (int i = 0; i < 3; i++) {
+                    fontColor[i] = 0;
+                }
 
                 hWndScroll = CreateWindowEx((DWORD)NULL,
                     TEXT("scrollbar"),
@@ -219,8 +223,8 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
             SelectObject(hdc, hFont);
             SetBkMode(hdc, OPAQUE);
-            SetBkColor(hdc, RGB(0,255,255));
-            SetTextColor(hdc, RGB(scrollColor,scrollColor + 70, scrollColor+150));
+            SetBkColor(hdc, RGB(scrollColor,scrollColor + 70, scrollColor+150));
+            SetTextColor(hdc, RGB(fontColor[0], fontColor[1], fontColor[2]));
             DrawText(hdc, TEXT(firstText), -1, &rcFoodList, DT_NOCLIP);
 
             EndPaint(hWnd, &Ps);
@@ -304,6 +308,27 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     MB_ICONINFORMATION);
             }
             break;
+        case ID_EVENT_RED: {
+                fontColor[0] = 255;
+                fontColor[1] = 0;
+                fontColor[2] = 0;
+                InvalidateRect(hWnd, &rcFoodList, TRUE);
+            }
+            break;
+        case ID_EVENT_GREEN: {
+                fontColor[0] = 0;
+                fontColor[1] = 255;
+                fontColor[2] = 0;
+                InvalidateRect(hWnd, &rcFoodList, TRUE);
+            }
+            break;
+        case ID_EVENT_BLUE: {
+                fontColor[0] = 0;
+                fontColor[1] = 0;
+                fontColor[2] = 255;
+                InvalidateRect(hWnd, &rcFoodList, TRUE);
+            }
+            break;
         }
     }
     break;
@@ -378,6 +403,30 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
 
 
+    case WM_KEYDOWN: {
+            switch (wParam) {
+
+            case VK_SPACE : {
+                    if (HIBYTE(GetAsyncKeyState(VK_LCONTROL))) {
+                        scrollColor = 0;
+                        SetScrollPos(hWndScroll, SB_CTL, scrollColor, TRUE);
+                        InvalidateRect(hWnd, &rcFoodList, TRUE);
+                        return 0;
+                    }
+                }
+                break;
+            case VK_F1: {
+                    if (HIBYTE(GetAsyncKeyState(VK_LCONTROL))) {
+                        fontColor[0] = 255;
+                        fontColor[1] = 255;
+                        fontColor[2] = 255;
+                        InvalidateRect(hWnd, &rcFoodList, TRUE);
+                    }
+                }
+                break;
+            }
+        }
+        break;
     case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;
