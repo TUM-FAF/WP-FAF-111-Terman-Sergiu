@@ -137,7 +137,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     10, 40,
                     300, 100,
                     hWnd,
-                    (HMENU)105,
+                    (HMENU) IDC_FOOD_LIST,
                     hInstance,
                     NULL);
 
@@ -265,7 +265,8 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     SendMessage(hWndList, LB_ADDSTRING, 0, (LPARAM)newInput);
                     SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
                     foodNumber++;
-                    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+                    InvalidateRect(hWnd, &rcQuantity, TRUE);
+                    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
                 }
             }
@@ -327,6 +328,17 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 fontColor[1] = 0;
                 fontColor[2] = 255;
                 InvalidateRect(hWnd, &rcFoodList, TRUE);
+            }
+            break;
+
+        case IDC_FOOD_LIST:{
+                if (HIWORD(wParam) == LBN_DBLCLK) {
+                    int index = SendMessage(hWndList, LB_GETCURSEL, 0, 0);
+                    SendMessage(hWndList, LB_DELETESTRING, (WPARAM)index, 0);
+                    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+                    foodNumber--;
+                    InvalidateRect(hWnd, &rcQuantity, TRUE);
+                }
             }
             break;
         }
@@ -401,8 +413,6 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
         }
         break;
 
-
-
     case WM_KEYDOWN: {
             switch (wParam) {
 
@@ -417,16 +427,21 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 break;
             case VK_F1: {
                     if (HIBYTE(GetAsyncKeyState(VK_LCONTROL))) {
-                        fontColor[0] = 255;
+
+                        SendMessage(hWndList, LB_RESETCONTENT, 0, 0);
+                        foodNumber = 0;
+                        InvalidateRect(hWnd, &rcQuantity, TRUE);
+                        /*fontColor[0] = 255;
                         fontColor[1] = 255;
                         fontColor[2] = 255;
-                        InvalidateRect(hWnd, &rcFoodList, TRUE);
+                        InvalidateRect(hWnd, &rcFoodList, TRUE);*/
                     }
                 }
                 break;
             }
         }
         break;
+
     case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;

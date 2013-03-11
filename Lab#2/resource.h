@@ -10,3 +10,6 @@
 #define ID_EVENT_GREEN 9004
 #define ID_EVENT_BLUE 9005
 #define ID_SCROLL_BAR 9006
+
+
+#define IDC_FOOD_LIST  9007
