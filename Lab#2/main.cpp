@@ -9,95 +9,133 @@
 #define INPUT_TEXT_ADD_FOOD     104
 
 
+LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 HWND hFoodList;
 HWND hInputFood;
 char food[500] = "";
 char firstText[] = "Food List : ";
 int foodNumber = 0;
-RECT updateRect;
+static int scrollColor = 0;
 HINSTANCE hInstance;
 
-LRESULT CALLBACK WinProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam);
+
+
 
 int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShowCmd) {
 
-	hInstance = hInst;
+    hInstance = hInst;
 
 
-	WNDCLASSEX wClass;
-	ZeroMemory(&wClass,sizeof(WNDCLASSEX));
-	wClass.cbSize = sizeof(WNDCLASSEX);
-	wClass.hbrBackground = (HBRUSH)COLOR_WINDOW;
-	wClass.hCursor = LoadCursor(NULL,IDC_ARROW);
-	wClass.hIcon = NULL;
-	wClass.hIconSm = NULL;
-	wClass.hInstance = hInst;
-	wClass.lpszMenuName  = MAKEINTRESOURCE(IDR_MYMENU);
-	wClass.lpfnWndProc = (WNDPROC)WinProc;
-	wClass.lpszClassName = "Window Class";
-	wClass.lpszMenuName = NULL;
-	wClass.style = CS_HREDRAW|CS_VREDRAW;
+    WNDCLASSEX wClass;
+    //ZeroMemory(&wClass,sizeof(WNDCLASSEX));
 
+    wClass.hInstance = hInst;
+    wClass.lpszClassName = "Window Class";
+    wClass.lpfnWndProc = (WNDPROC)WinProc;
+    wClass.style = CS_HREDRAW|CS_VREDRAW;
+    wClass.cbSize = sizeof(WNDCLASSEX);
+
+
+    wClass.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
+    wClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wClass.hIcon = NULL;
+    wClass.hIconSm = NULL;
+    wClass.lpszMenuName  = MAKEINTRESOURCE(IDR_MYMENU);
+    //wClass.cbClsExtra = 0;                                                         // No extra bytes after the window class
+    //wClass.cbWndExtra = 0;
 
     HMENU hmenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MYMENU));
 
+    wClass.lpszMenuName = NULL;
 
-	if (!RegisterClassEx(&wClass)) {
-		int nResult=GetLastError();
-		MessageBox(NULL,
-			"Window class creation failed\r\n",
-			"Window Class Failed",
-			MB_ICONERROR);
-	}
 
-	HWND hWnd=CreateWindowEx(NULL,
-			"Window Class",
-			"Windows application",
-			WS_OVERLAPPEDWINDOW,
-			500,
-			200,
-			335,
-			260,
-			NULL,
-			NULL,
-			hInst,
-			hmenu);
+    if (!RegisterClassEx(&wClass)) {
+        GetLastError();
+        MessageBox(NULL,
+            "Window class creation failed\r\n",
+            "Window Class Failed",
+            MB_ICONERROR);
+    }
 
-	if(!hWnd) {
-		int nResult=GetLastError();
+    HWND hWnd=CreateWindowEx(NULL,
+            "Window Class",
+            "Windows application",
+            WS_OVERLAPPEDWINDOW,
+            500,
+            200,
+            400,
+            300,
+            NULL,
+            hmenu,
+            hInst,
+            NULL);
 
-		MessageBox(NULL,
-			"Window creation failed\r\n",
-			"Window Creation Failed",
-			MB_ICONERROR);
-	}
+    if(!hWnd) {
+        GetLastError();
+
+        MessageBox(NULL,
+            "Window creation failed\r\n",
+            "Window Creation Failed",
+            MB_ICONERROR);
+    }
 
     ShowWindow(hWnd,nShowCmd);
 
-	MSG msg;
-	ZeroMemory(&msg,sizeof(MSG));
+    MSG msg;
+    ZeroMemory(&msg,sizeof(MSG));
 
-	while(GetMessage(&msg,NULL,0,0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    while(GetMessage(&msg,NULL,0,0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 
-	return 0;
+    return 0;
 }
 
 
 LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     PAINTSTRUCT Ps;
-    HMENU hMenu, hSubMenu;
-    HWND hWndList;
-	switch(msg) {
+    static HWND hWndList;
+    static HWND hWndScroll;
+    static RECT rcScroll, rcFoodList, rcInputFood, rcQuantity;
+    HBRUSH hBrushStatic;
+
+    switch(msg) {
     case WM_CREATE: {
 
+                SetRect(&rcScroll, 315, 40, 25, 150);
+                SetRect(&rcFoodList, 10, 10, 100, 40);
+                SetRect(&rcInputFood, 120, 150, 190, 25);
+                SetRect(&rcQuantity, 210, 10, 300, 30);
+
+                hWndScroll = CreateWindowEx((DWORD)NULL,
+                    TEXT("scrollbar"),
+                    NULL,
+                    WS_CHILD | WS_VISIBLE | SBS_VERT,
+                    315, 40, 25, 150,
+                    hWnd,
+                    (HMENU) ID_SCROLL_BAR,
+                    hInstance,
+                    NULL);
+
+                SetScrollRange(hWndScroll,SB_CTL, 0, 255, FALSE);
+                SetScrollPos(hWndScroll, SB_CTL, scrollColor, TRUE);
+
+                //OldScroll = (WNDPROC) SetWindowLong(hWndSCroll, GWL_WNDPROC, (LONG) ScrollProc);
                 /**
-                * Add a menu
+                * Create ListBox
                 */
-
-
+                hWndList = CreateWindowEx((DWORD)NULL,
+                    TEXT("listbox"),
+                    "",
+                    WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_AUTOVSCROLL | LBS_STANDARD | WS_BORDER,
+                    10, 40,
+                    300, 100,
+                    hWnd,
+                    (HMENU)105,
+                    hInstance,
+                    NULL);
 
 
                 /**
@@ -155,163 +193,197 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     (HMENU)INPUT_TEXT_ADD_FOOD,
                     GetModuleHandle(NULL),
                     NULL);
+
             }
             break;
 
-		case WM_PAINT: {
-                HDC hdc = BeginPaint(hWnd, &Ps);
-                RECT rect;
+    case WM_PAINT: {
+            HDC hdc = BeginPaint(hWnd, &Ps);
 
-                hWndList = CreateWindowEx(WS_EX_CLIENTEDGE,
-                     TEXT("listbox"),
-                     "",
+            /**
+            * Draw Text
+            */
 
-                     WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_AUTOVSCROLL | LBS_STANDARD | WS_BORDER,
-                     10, 40,
-                     300, 100,
-                     hWnd,
-                    (HMENU)105,
-                     hInstance,
-                     NULL);
-                /**
-                * Draw Text
-                */
+            // Second Text
+            char foodNrMessage[256] = "Number : ";
+            char nr[50];
+            strcat(foodNrMessage, itoa(foodNumber, nr, 10));
+            SetBkMode(hdc, TRANSPARENT);
 
-                // Second Text
-                char foodNrMessage[256] = "Number : ";
-                char nr[50];
-                strcat(foodNrMessage, itoa(foodNumber, nr, 10));
-                SetBkMode(hdc, TRANSPARENT);
-                SetRect(&updateRect, 210, 10, 300, 30);
-                DrawText( hdc, foodNrMessage, -1, &updateRect, DT_SINGLELINE | DT_NOCLIP  ) ;
+            DrawText( hdc, foodNrMessage, -1, &rcQuantity, DT_SINGLELINE | DT_NOCLIP) ;
 
-                // First Text
-                HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
-                CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
-                SetRect(&rect, 10, 10, 50, 50);
-
-                SelectObject(hdc, hFont);
-                SetBkMode(hdc, OPAQUE);
-                SetBkColor(hdc, RGB(0,255,255));
-                SetTextColor(hdc, RGB(255,0,0));
-                DrawText(hdc, TEXT(firstText), -1,&rect, DT_NOCLIP);
-
-                EndPaint(hWnd, &Ps);
-            }
-            break;
-
-        case WM_CTLCOLOREDIT: {
-                HDC hdc = (HDC)wParam;
-                HWND hwnd = (HWND)lParam;
-                HBRUSH color;
-
-                if (GetDlgCtrlID(hwnd) == INPUT_TEXT_ADD_FOOD) {
-                    color = CreateSolidBrush(RGB(225, 225, 225));
-                    SetTextColor(hdc, RGB(0, 0, 255));
-                    SetBkMode(hdc, TRANSPARENT);
-                    SetBkColor(hdc,(LONG)color);
-                }
-                return (LONG) color;
-            }
-            break;
-
-		case WM_COMMAND: {
-            switch(LOWORD(wParam)) {
-                case BUTTON_ADD_FOOD: {
-
-                        char buffer[256];
-                        SendMessage(hInputFood,
-                            WM_GETTEXT,
-                            sizeof(buffer)/sizeof(buffer[0]),
-                            reinterpret_cast<LPARAM>(buffer));
+            // First Text
+            HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
+            CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
 
 
-                        if (strlen(buffer) > 0){
-                            char newInput[255] = "- ";
+            SelectObject(hdc, hFont);
+            SetBkMode(hdc, OPAQUE);
+            SetBkColor(hdc, RGB(0,255,255));
+            SetTextColor(hdc, RGB(scrollColor,scrollColor + 70, scrollColor+150));
+            DrawText(hdc, TEXT(firstText), -1, &rcFoodList, DT_NOCLIP);
 
-
-
-                            strcat(newInput, buffer);
-                            SendMessage(hWndList, LB_ADDSTRING, 0, (LPARAM)"jorel");
-
-                            SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
-                            foodNumber++;
-                            InvalidateRect(hWnd, NULL, TRUE);
-
-                        }
-
-                    }
-                    break;
-
-                case BUTTON_DISPLAY_FOOD_NR: {
-                        char buffer[255] = "";
-
-                        switch(foodNumber){
-                        case 0:http://pastebin.com/62fGU90U
-                        case 1:
-                        case 2:
-                        case 3:
-                            strcat(buffer, "You are not hungry at all");
-                            break;
-                        case 4:
-                        case 5:
-                        case 6:
-                            strcat(buffer, "I see you are hungry now");
-                            break;
-                        default:
-                            strcat(buffer, "You are starvin... go get something to eat");
-                            break;
-                        }
-                        MessageBox(NULL,
-                            buffer,
-                            "Funny",
-                            MB_ICONINFORMATION);
-                    }
-                    break;
-            }
+            EndPaint(hWnd, &Ps);
         }
         break;
 
-        case WM_SIZE: {
-                INT nWidth = LOWORD(lParam);
-                HWND hFunnyButton = GetDlgItem(hWnd, BUTTON_DISPLAY_FOOD_NR);
+    case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            HWND hwnd = (HWND)lParam;
+            HBRUSH color;
 
-                MoveWindow(hFunnyButton, 10, 180, nWidth - 17, 40, TRUE);
+            if (GetDlgCtrlID(hwnd) == INPUT_TEXT_ADD_FOOD) {
+                color = CreateSolidBrush(RGB(225, 225, 225));
+                SetTextColor(hdc, RGB(0, 0, 255));
+                SetBkMode(hdc, TRANSPARENT);
+                SetBkColor(hdc,(LONG)color);
+            }
+            return (LONG) color;
+        }
+        break;
 
-                HWND hShowFoodInput = GetDlgItem(hWnd, INPUT_TEXT_SHOW_FOOD);
-                HWND hAddFood = GetDlgItem(hWnd, INPUT_TEXT_ADD_FOOD);
+    case WM_COMMAND: {
+        switch(LOWORD(wParam)) {
+        case BUTTON_ADD_FOOD: {
 
-                MoveWindow(hShowFoodInput, 10, 40, nWidth - 18, 100, TRUE);
-                MoveWindow(hAddFood, 120, 150, nWidth - 128, 25, TRUE);
+                char buffer[256];
+                SendMessage(hInputFood,
+                    WM_GETTEXT,
+                    sizeof(buffer)/sizeof(buffer[0]),
+                    reinterpret_cast<LPARAM>(buffer));
+
+
+                if (strlen(buffer) > 0){
+                    char newInput[255] = "- ";
+
+                    strcat(newInput, buffer);
+
+                    SendMessage(hWndList, LB_ADDSTRING, 0, (LPARAM)newInput);
+                    SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
+                    foodNumber++;
+                    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+
+                }
             }
             break;
 
-        case WM_GETMINMAXINFO: {
-                MINMAXINFO * mmiStruct;
-                mmiStruct = (MINMAXINFO*)lParam;
+        case BUTTON_DISPLAY_FOOD_NR: {
+                char buffer[255] = "";
 
-                POINT ptPoint;
-
-                ptPoint.x = 335;    //Minimum width of the window.
-                ptPoint.y = 260;    //Minimum height of the window.
-                mmiStruct->ptMinTrackSize = ptPoint;
-
-                ptPoint.x = GetSystemMetrics(SM_CXMAXIMIZED);   //Maximum width of the window.
-                ptPoint.y = GetSystemMetrics(SM_CYMAXIMIZED);   //Maximum height of the window.
-                mmiStruct->ptMaxTrackSize = ptPoint;
+                switch(foodNumber){
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                    strcat(buffer, "You are not hungry at all");
+                    break;
+                case 4:
+                case 5:
+                case 6:
+                    strcat(buffer, "I see you are hungry now");
+                    break;
+                default:
+                    strcat(buffer, "You are starvin... go get something to eat");
+                    break;
+                }
+                MessageBox(NULL,
+                    buffer,
+                    "Funny",
+                    MB_ICONINFORMATION);
             }
             break;
-
-
-
-		case WM_DESTROY: {
+        case ID_FILE_EXIT: {
                 PostQuitMessage(0);
-                return 0;
             }
             break;
-	}
+        case ID_STUFF_ABOUT: {
+                char aboutText[255] = "Here is the info about the program.\n It's Created by Sergiu Terman in 2013";
+                MessageBox(NULL,
+                    aboutText,
+                    "About",
+                    MB_ICONINFORMATION);
+            }
+            break;
+        }
+    }
+    break;
 
-	return DefWindowProc(hWnd,msg,wParam,lParam);
+    case WM_SIZE: {
+            /*INT nWidth = LOWORD(lParam);
+            HWND hFunnyButton = GetDlgItem(hWnd, BUTTON_DISPLAY_FOOD_NR);
+
+            MoveWindow(hFunnyButton, 10, 180, nWidth - 17, 40, TRUE);
+
+            HWND hShowFoodInput = GetDlgItem(hWnd, INPUT_TEXT_SHOW_FOOD);
+            HWND hAddFood = GetDlgItem(hWnd, INPUT_TEXT_ADD_FOOD);
+
+            MoveWindow(hShowFoodInput, 10, 40, nWidth - 18, 100, TRUE);
+            MoveWindow(hAddFood, 120, 150, nWidth - 128, 25, TRUE);*/
+        }
+        break;
+
+    case WM_VSCROLL: {
+            switch (LOWORD(wParam)) {
+            case SB_LINEDOWN: {
+                    scrollColor = min (255, scrollColor + 1);
+                }
+                break;
+            case SB_LINEUP: {
+                    scrollColor = min (255, scrollColor - 1);
+                }
+                break;
+            case SB_PAGEDOWN: {
+                    scrollColor += 15;
+                }
+                break;
+            case SB_PAGEUP: {
+                    scrollColor -= 15;
+                }
+                break;
+            case SB_BOTTOM: {
+                    scrollColor = 255;
+                }
+                break;
+            case SB_TOP: {
+                    scrollColor = 0;
+                }
+                break;
+            case SB_THUMBPOSITION:
+            case SB_THUMBTRACK: {
+                    scrollColor = HIWORD(wParam);
+                }
+                break;
+            }
+
+            SetScrollPos(hWndScroll, SB_CTL, scrollColor, TRUE);
+            InvalidateRect(hWnd, &rcFoodList, TRUE);
+        }
+        break;
+
+    case WM_GETMINMAXINFO: {
+            MINMAXINFO * mmiStruct;
+            mmiStruct = (MINMAXINFO*)lParam;
+
+            POINT ptPoint;
+
+            ptPoint.x = 335;    //Minimum width of the window.
+            ptPoint.y = 260;    //Minimum height of the window.
+            mmiStruct->ptMinTrackSize = ptPoint;
+
+            ptPoint.x = GetSystemMetrics(SM_CXMAXIMIZED);   //Maximum width of the window.
+            ptPoint.y = GetSystemMetrics(SM_CYMAXIMIZED);   //Maximum height of the window.
+            mmiStruct->ptMaxTrackSize = ptPoint;
+        }
+        break;
+
+
+
+    case WM_DESTROY: {
+            PostQuitMessage(0);
+            return 0;
+        }
+        break;
+    }
+
+    return DefWindowProc(hWnd,msg,wParam,lParam);
 }
-
-

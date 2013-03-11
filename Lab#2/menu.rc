@@ -1,15 +1,16 @@
 #include "resource.h"
 
+
 IDR_MYMENU MENU
 BEGIN
-    POPUP "&File"
+    POPUP "File"
     BEGIN
-        MENUITEM "E&xit", ID_FILE_EXIT
+        MENUITEM "Exit", ID_FILE_EXIT
     END
 
-    POPUP "&Stuff"
+    POPUP "Stuff"
     BEGIN
-        MENUITEM "&Go", ID_STUFF_GO
-        MENUITEM "G&o somewhere else", 0, GRAYED
+        MENUITEM "Go", ID_STUFF_GO
+        MENUITEM "About", ID_STUFF_ABOUT
     END
 END
