@@ -1,5 +1,13 @@
 #include "resource.h"
 
+
+STRINGTABLE
+BEGIN
+    IDS_FOODNUMBER, "Number : %i"
+END
+
+
+
 IDI_ICON ICON DISCARDABLE "linux_icon.ico"
 IDR_MYMENU MENU
 BEGIN
@@ -15,10 +23,16 @@ BEGIN
 
     POPUP "Event"
     BEGIN
-        MENUITEM "Red Font", ID_EVENT_RED
-        MENUITEM "Green Font", ID_EVENT_GREEN
+        MENUITEM "R&ed Font", ID_EVENT_RED
+        MENUITEM "G&reen Font", ID_EVENT_GREEN
         MENUITEM "Blue Font", ID_EVENT_BLUE
     END
+
+END
+
+ID_ACCELERATOR ACCELERATORS
+BEGIN
+    "^R", ID_EVENT_RED, ASCII, NOINVERT
 END
 
 

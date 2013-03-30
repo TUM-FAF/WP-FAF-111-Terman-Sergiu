@@ -20,6 +20,8 @@ static int scrollColor = 0;
 static int widthScroll = 0;
 static int heightScroll = 40;
 HINSTANCE hInstance;
+static int fontColor[3];
+
 
 
 
@@ -27,6 +29,7 @@ HINSTANCE hInstance;
 int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShowCmd) {
 
     hInstance = hInst;
+    //HACCEL hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(ID_ACCELERATOR));
 
 
     WNDCLASSEX wClass;
@@ -44,13 +47,14 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
     wClass.hCursor = LoadCursor(NULL, IDC_HAND);
     wClass.hIconSm = NULL;
     wClass.lpszMenuName  = MAKEINTRESOURCE(IDR_MYMENU);
-    wClass.hIcon  = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
+    wClass.hIcon  = LoadIcon (GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
     //wClass.cbClsExtra = 0;                                                         // No extra bytes after the window class
     //wClass.cbWndExtra = 0;
 
     HMENU hmenu = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MYMENU));
 
     wClass.lpszMenuName = NULL;
+
 
 
     if (!RegisterClassEx(&wClass)) {
@@ -74,6 +78,8 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
             hInst,
             NULL);
 
+
+
     if(!hWnd) {
         GetLastError();
 
@@ -86,7 +92,17 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
     ShowWindow(hWnd,nShowCmd);
 
     MSG msg;
-    ZeroMemory(&msg,sizeof(MSG));
+    //ZeroMemory(&msg,sizeof(MSG));
+
+
+
+
+    while (GetMessage (&msg, NULL, 0, 0)) {
+        //if (!TranslateAccelerator (hWnd, hAccel, &msg)) {
+            TranslateMessage (&msg) ;
+            DispatchMessage (&msg) ;
+       //}
+    }
 
     while(GetMessage(&msg,NULL,0,0)) {
         TranslateMessage(&msg);
@@ -94,8 +110,8 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShow
     }
 
     return 0;
-}
 
+}
 
 LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     PAINTSTRUCT Ps;
@@ -103,16 +119,14 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     static HWND hWndScroll, hWndWidthScroll, hWndHeightScroll;
     static RECT rcScroll, rcFoodList, rcInputFood, rcQuantity;
     HBRUSH hBrushStatic;
-    static int fontColor[3];
+
 
 
     SetRect(&rcScroll, 315, 40, 25, 150);
     SetRect(&rcFoodList, 10, 10, 100, 40);
     SetRect(&rcInputFood, 120, 150, 190, 25);
     SetRect(&rcQuantity, 210, 10, 300, 30);
-    for (int i = 0; i < 3; i++) {
-        fontColor[i] = 0;
-    }
+
 
     switch(msg) {
     case WM_CREATE: {
@@ -157,6 +171,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 /**
                 * Create ListBox
                 */
+
                 hWndList = CreateWindowEx((DWORD)NULL,
                     TEXT("listbox"),
                     "",
@@ -236,17 +251,24 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
             */
 
             // Second Text
-            char foodNrMessage[256] = "Number : ";
+            char foodNrMessage[40];
             char nr[50];
-            strcat(foodNrMessage, itoa(foodNumber, nr, 10));
+            LoadString (hInstance, IDS_FOODNUMBER, foodNrMessage, 40) ;
+            wsprintf (nr, foodNrMessage, foodNumber);
+
+
+            //strcat(foodNrMessage, itoa(, nr, 10));
             SetBkMode(hdc, TRANSPARENT);
 
-            DrawText( hdc, foodNrMessage, -1, &rcQuantity, DT_SINGLELINE | DT_NOCLIP) ;
+            DrawText( hdc, nr, -1, &rcQuantity, DT_SINGLELINE | DT_NOCLIP) ;
 
             // First Text
             HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
             CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
 
+            /*fontColor[0] = 200;
+            fontColor[0] = 0;
+            fontColor[0] = 110;*/
 
             SelectObject(hdc, hFont);
             SetBkMode(hdc, OPAQUE);
