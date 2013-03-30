@@ -43,7 +43,7 @@ void drawBezier(POINT coord[4], HDC hdc) {
     PolyBezier (hdc, coord, 4);
 }
 
-
+int checkBoundries(int xPos, int yPos, RECT drawingArea);
 
 
 HINSTANCE hInstance;
@@ -99,6 +99,7 @@ int rubberMark;
 
 int bezierStage = 0;
 
+int outOfBoud = 0;
 
 int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShowCmd) {
     MSG msg;
@@ -419,8 +420,13 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
         break;
 
     case WM_LBUTTONDOWN: {
-
             if (wParam & MK_LBUTTON) {
+
+                if(!checkBoundries(LOWORD (lParam), HIWORD (lParam), rcDrawingArea)) {
+                    outOfBoud = 1;
+                    return 0;
+                }
+                outOfBoud = 0;
 
                 if(eraseMode) {
                     int centerX = LOWORD (lParam);
@@ -493,10 +499,17 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
 	case WM_MOUSEMOVE: {
             if (wParam & MK_LBUTTON) {
+                if (outOfBoud) {
+                    bezierStage --;
+                    return 0;
+                }
+
+                if (!checkBoundries(LOWORD (lParam), HIWORD (lParam), rcDrawingArea))
+                    return 0;
                 SelectObject(hdc, CreatePen(PS_SOLID, thicknessMark + 1, RGB(255, 255, 255)));
                 SelectObject(hdc, CreateSolidBrush(RGB(255, 255, 255)));
 
-                if(eraseMode) {
+                if (eraseMode) {
                     int centerX = LOWORD (lParam);
                     int centerY = HIWORD (lParam);
                     int delta = 5 + (rubberMark * 3);
@@ -684,118 +697,6 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
             break;
         }
 
-            /*TCHAR  ListItem[256];
-            (TCHAR) SendMessage((HWND) hCmbxDrawnObj, (UINT) CB_GETLBTEXT,
-                (WPARAM) ItemIndex, (LPARAM) ListItem);*/
-
-        /*switch(LOWORD(wParam)) {
-        case BUTTON_ADD_FOOD: {
-8
-                char buffer[256];
-                SendMessage(hInputFood,
-                    WM_GETTEXT,
-                    sizeof(buffer)/sizeof(buffer[0]),
-                    reinterpret_cast<LPARAM>(buffer));
-
-
-                if (strlen(buffer) > 0){
-                    char newInput[255] = "- ";
-
-                    strcat(newInput, buffer);
-
-                    SendMessage(hWndList, LB_ADDSTRING, 0, (LPARAM)newInput);
-                    SendMessage(hInputFood, WM_SETTEXT, NULL, (LPARAM)"");
-                    foodNumber++;
-                    InvalidateRect(hWnd, &rcQuantity, TRUE);
-                    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
-
-                }
-            }
-            break;
-
-        case BUTTON_DISPLAY_FOOD_NR: {
-                char buffer[255] = "";
-
-                switch(foodNumber){
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                    strcat(buffer, "You are not hungry at all");
-                    break;
-                case 4:
-                case 5:
-                case 6:
-                    strcat(buffer, "I see you are hungry now");
-                    break;
-                default:
-                    strcat(buffer, "You are starvin... go get something to eat");
-                    break;
-                }
-                MessageBox(NULL,
-                    buffer,
-                    "Funny",
-                    MB_ICONINFORMATION);
-            }
-            break;
-        case ID_FILE_EXIT: {
-                PostQuitMessage(0);
-            }
-            break;
-        case ID_STUFF_ABOUT: {
-                char aboutText[255] = "Here is the info about the program.\n It's Created by Sergiu Terman in 2013";
-                MessageBox(NULL,
-                    aboutText,
-                    "About",
-                    MB_ICONINFORMATION);
-            }
-            break;
-        case ID_EVENT_RED: {
-                fontColor[0] = 255;
-                fontColor[1] = 0;
-                fontColor[2] = 0;
-                InvalidateRect(hWnd, &rcFoodList, TRUE);
-            }
-            break;
-        case ID_EVENT_GREEN: {
-                fontColor[0] = 0;
-                fontColor[1] = 255;
-                fontColor[2] = 0;
-                InvalidateRect(hWnd, &rcFoodList, TRUE);
-            }
-            break;
-        case ID_EVENT_BLUE: {
-                fontColor[0] = 0;
-                fontColor[1] = 0;
-                fontColor[2] = 255;
-                InvalidateRect(hWnd, &rcFoodList, TRUE);
-            }
-            break;
-
-        case IDC_FOOD_LIST:{
-                if (HIWORD(wParam) == LBN_DBLCLK) {
-                    int index = SendMessage(hWndList, LB_GETCURSEL, 0, 0);
-                    SendMessage(hWndList, LB_DELETESTRING, (WPARAM)index, 0);
-                    foodNumber--;
-                    InvalidateRect(hWnd, &rcQuantity, TRUE);
-                }
-            }
-            break;
-        }
-    }
-    break;
-
-    case WM_SIZE: {
-            /*INT nWidth = LOWORD(lParam);
-            HWND hFunnyButton = GetDlgItem(hWnd, BUTTON_DISPLAY_FOOD_NR);
-
-            MoveWindow(hFunnyButton, 10, 180, nWidth - 17, 40, TRUE);
-
-            HWND hShowFoodInput = GetDlgItem(hWnd, INPUT_TEXT_SHOW_FOOD);
-            HWND hAddFood = GetDlgItem(hWnd, INPUT_TEXT_ADD_FOOD);
-
-            MoveWindow(hShowFoodInput, 10, 40, nWidth - 18, 100, TRUE);
-            MoveWindow(hAddFood, 120, 150, nWidth - 128, 25, TRUE);*/
         }
         break;
 
@@ -818,3 +719,23 @@ void setupPen(int stroke, int color[3]) {
 void setupBrush(int color[3]) {
     hBrush = CreateSolidBrush(RGB(color[0], color[1], color[2]));
 }
+
+int checkBoundries(int xPos, int yPos, RECT drawingArea){
+    int delta;
+    if (eraseMode) {
+        delta = 5 + (rubberMark * 3);
+    } else {
+        delta = (thicknessMark+1)/2  + 1;
+    }
+
+    if (xPos < (drawingArea.left + delta))
+        return 0;
+    if (xPos > (drawingArea.right - delta))
+        return 0;
+    if (yPos < (drawingArea.top + delta))
+        return 0;
+    if (yPos > (drawingArea.bottom - delta))
+        return 0;
+    return 1;
+}
+
