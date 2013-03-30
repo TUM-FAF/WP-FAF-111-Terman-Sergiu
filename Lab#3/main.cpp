@@ -48,6 +48,7 @@ void drawBezier(POINT coord[4], HDC hdc) {
 
 HINSTANCE hInstance;
 /// Global Variables
+char bmpfile[] = "skull.bmp";
 int penColor[] = {0, 0, 0};
 int brushColor[] = {255, 255, 255};
 HBRUSH hBrush;
@@ -167,35 +168,24 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     static HWND hInptColorR, hInptColorG, hInptColorB;                  // Input Fields
     static HWND hCmbxDrawnObj, hCmbxThickness, hCmbxRubber;             // Combo boxes
     static HWND hChbxFilled;                                            // Check box
-    static HWND hRadioPen, hRadioBrush;                                 // Radio buttons
+    static HWND hRadioPen, hRadioBrush;                                // Radio buttons
 
     RECT rcPenColor, rcBrushColor;
     RECT rcDrawingArea;
+    RECT rcGradient;
 
 
     SetRect(&rcPenColor, 30, 315, 75, 360);
     SetRect(&rcBrushColor, 85, 315, 130, 360);
     SetRect(&rcDrawingArea, 180, 10, 770, 550);
+    SetRect(&rcGradient, 10, 370, 80, 410);
 
     HDC hdc = GetDC(hWnd);
-
-    //static HWNDrcPenColordrawItemMark = 0;
-
-
-    /*static HWND hWndList;
-    static HWND hWndScroll, hWndWidthScroll, hWndHeightScroll;*/
 
     HBRUSH hBrushStatic;
 
     switch(msg) {
     case WM_CREATE: {
-
-            //SetRect(&rectangle, 200, 300, 300, 300);
-            //HBRUSH hBrush = CreateSolidBrush(RGB(0, 0, 0));
-            //SelectObject (hdc, GetStockObject (WHITE_PEN)) ;
-
-            //FillRect (hdc, &rectangle, hBrush);
-
             // *** Set color button ***
             hBtnSetColor = CreateWindowEx(NULL,
                     TEXT("button"),
@@ -266,8 +256,6 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                     (HMENU)IDC_RADIO_BRUSH,
                     hInstance,
                     NULL);
-
-
 
             // *** Draw object button ***
             hBtnDraw = CreateWindowEx(NULL,
@@ -429,6 +417,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 hWnd, (HMENU)0, hInstance, NULL);
         }
         break;
+
     case WM_LBUTTONDOWN: {
 
             if (wParam & MK_LBUTTON) {
@@ -484,6 +473,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
             }
         }
         break;
+
     case WM_LBUTTONUP:{
         if (drawItemMark == 3) {
             switch (bezierStage) {
@@ -500,6 +490,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
         }
     }
     break;
+
 	case WM_MOUSEMOVE: {
             if (wParam & MK_LBUTTON) {
                 SelectObject(hdc, CreatePen(PS_SOLID, thicknessMark + 1, RGB(255, 255, 255)));
@@ -584,11 +575,11 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
             }
         }
 	    break;
+
     case WM_PAINT: {
             HDC hdc = BeginPaint(hWnd, &Ps);
-            //RECT rcDrawingArea;
-            //SetRect(&rcDrawingArea, 180, 10, 750, 530);
-            //HPEN hpen = CreatePen(PS_SOLID, 10, RGB(0, 255, 0));
+            RECT temp;
+
             SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(0, 0, 0)));
             SelectObject(hdc, CreateSolidBrush(RGB(255, 255, 255)));
             Rectangle(hdc, rcDrawingArea.left, rcDrawingArea.top, rcDrawingArea.right, rcDrawingArea.bottom);
@@ -598,69 +589,41 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
 
             SelectObject(hdc, CreateSolidBrush(RGB(brushColor[0], brushColor[1], brushColor[2])));
             Rectangle(hdc, rcBrushColor.left, rcBrushColor.top, rcBrushColor.right, rcBrushColor.bottom);
-            //FillRect(hdc, &rcDrawingArea, CreateSolidBrush(RGB(255, 255, 255)));
-            //RECT rectangle;
-            /*MoveToEx (hdc, 0, 0, NULL) ;
-            LineTo (hdc, 100, 100) ;*/
-            /*HDC hdc = BeginPaint(hWnd, &Ps);
-            RECT rect;
-            SetRect(&rect, 315, 40, 25, 150);
-            HBRUSH hBrush = CreateSolidBrush(RGB(250, 25, 5));
 
-            //HDC hdc = BeginPaint(hWnd, &Ps);
+            // *** Gradient
+            int r1 = 255, g1 = 0, b1 = 0;
+
+            /* End Color; Change the R,G,B values
+            to the color of your choice */
+            int r2 = 255, g2 = 255, b2 = 0;
+
+            /* loop to create the gradient */
+            for(int i = rcGradient.left; i < rcGradient.right; i++)
+            {
+                int r,g,b;
+                r = r1 + (i * (r2-r1) / rcGradient.right);
+                g = g1 + (i * (g2-g1) / rcGradient.right);
+                b = b1 + (i * (b2-b1) / rcGradient.right);
+                temp.left = i;
+                temp.top = rcGradient.top;
+                temp.right = i + 1;
+                temp.bottom = rcGradient.bottom;
+                HBRUSH color = CreateSolidBrush(RGB(r, g, b));
+                FillRect(hdc, &temp, color);
+            }
+
+            // Load a bitmap image
+            // Static Bitmap Code:
+            HWND hStatic = CreateWindowEx (WS_EX_STATICEDGE, "STATIC", NULL,
+            WS_CHILD | WS_VISIBLE | SS_BITMAP, 0, 420, 0, 0, hWnd, 0, hInstance, NULL);
+
+            HANDLE hImage = LoadImage(hInstance, bmpfile, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+            SendMessage(hStatic, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImage);
 
 
-            /**
-            * Draw Text
-            */
-/*
-            // Second Text
-            char foodNrMessage[40];
-            char nr[50];
-            LoadString (hInstance, IDS_FOODNUMBER, foodNrMessage, 40) ;
-            wsprintf (nr, foodNrMessage, foodNumber);
-
-
-            //strcat(foodNrMessage, itoa(, nr, 10));
-            SetBkMode(hdc, TRANSPARENT);
-
-            DrawText( hdc, nr, -1, &rcQuantity, DT_SINGLELINE | DT_NOCLIP) ;
-
-            // First Text
-            HFONT hFont = CreateFont(25,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
-            CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
-
-            /*fontColor[0] = 200;
-            fontColor[0] = 0;
-            fontColor[0] = 110;*/
-/*
-            SelectObject(hdc, hFont);
-            SetBkMode(hdc, OPAQUE);
-            SetBkColor(hdc, RGB(scrollColor,scrollColor + 70, scrollColor+150));
-            SetTextColor(hdc, RGB(fontColor[0], fontColor[1], fontColor[2]));
-            DrawText(hdc, TEXT(firstText), -1, &rcFoodList, DT_NOCLIP);
-*/
-            //EndPaint(hWnd, &Ps);
             EndPaint(hWnd, &Ps);
         }
         break;
-
-    case WM_CTLCOLOREDIT: {
-            /*HDC hdc = (HDC)wParam;
-            HWND hwnd = (HWND)lParam;
-            HBRUSH color;
-
-            if (GetDlgCtrlID(hwnd) == INPUT_TEXT_ADD_FOOD) {
-                color = CreateSolidBrush(RGB(225, 225, 225));
-                SetTextColor(hdc, RGB(0, 0, 255));
-                SetBkMode(hdc, TRANSPARENT);
-                SetBkColor(hdc,(LONG)color);
-            }
-            return (LONG) color;*/
-        }
-        break;
-
-
 
     case WM_COMMAND: {
 
@@ -836,151 +799,12 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
         }
         break;
 
-    case WM_VSCROLL: {
-
-   /*         switch (LOWORD(wParam)) {
-            case SB_LINEDOWN: {
-                    scrollColor = min (255, scrollColor + 1);
-                }
-                break;
-            case SB_LINEUP: {
-                    scrollColor = min (255, scrollColor - 1);
-                }
-                break;
-            case SB_PAGEDOWN: {
-                    scrollColor += 15;
-                }
-                break;
-            case SB_PAGEUP: {
-                    scrollColor -= 15;
-                }
-                break;
-            case SB_BOTTOM: {
-                    scrollColor = 255;
-                }
-                break;
-            case SB_TOP: {
-                    scrollColor = 0;
-                }
-                break;
-            case SB_THUMBPOSITION:
-            case SB_THUMBTRACK: {
-                    scrollColor = HIWORD(wParam);
-                }
-                break;
-            }
-
-            SetScrollPos(hWndScroll, SB_CTL, scrollColor, TRUE);
-            InvalidateRect(hWnd, &rcFoodList, TRUE);*/
-        }
-        break;
-
-    case WM_HSCROLL: {
-            /*RECT rect;
-            GetWindowRect(hWnd, &rect);
-            int iSysWidth = GetSystemMetrics(SM_CXSCREEN);
-            int iSysHeight = GetSystemMetrics(SM_CYSCREEN);
-            int iWinWidth = rect.right - rect.left;
-            int iWinHeight = rect.bottom - rect.top;
-
-            switch (GetWindowLong((HWND)lParam, GWL_ID)) {
-            case ID_WIDTH_SCROLL: {
-                    switch(LOWORD(wParam)) {
-                    case SB_LINELEFT:
-                        widthScroll -= 1;
-                        break;
-                    case SB_LINERIGHT:
-                        widthScroll += 1;
-                        break;
-                    case SB_THUMBPOSITION:
-                        widthScroll = HIWORD(wParam);
-                        break;
-                    default:
-                        break;
-                    }
-                    SetScrollPos(hWndWidthScroll, SB_CTL, widthScroll, TRUE);
-                    MoveWindow(hWnd, rect.left, rect.top, (widthScroll * iSysWidth / 100), iWinHeight, TRUE);
-                }
-                break;
-            case ID_HEIGHT_SCROLL: {
-                    switch(LOWORD(wParam)) {
-                    case SB_LINELEFT:
-                        widthScroll--;
-                        break;
-                    case SB_LINERIGHT:
-                        widthScroll++;
-                        break;
-                    case SB_THUMBPOSITION:
-                        widthScroll = HIWORD(wParam);
-                        break;
-                    default:
-                        break;
-                    }
-                    SetScrollPos(hWndHeightScroll, SB_CTL, widthScroll, TRUE);
-                    MoveWindow(hWnd, rect.left, rect.top, iWinWidth, (widthScroll * iSysHeight / 100), TRUE);
-                }
-                break;
-            }*/
-        }
-        break;
-
-    case WM_GETMINMAXINFO: {
-            MINMAXINFO * mmiStruct;
-            mmiStruct = (MINMAXINFO*)lParam;
-
-            POINT ptPoint;
-
-            ptPoint.x = 335;    //Minimum width of the window.
-            ptPoint.y = 260;    //Minimum height of the window.
-            mmiStruct->ptMinTrackSize = ptPoint;
-
-            ptPoint.x = GetSystemMetrics(SM_CXMAXIMIZED);   //Maximum width of the window.
-            ptPoint.y = GetSystemMetrics(SM_CYMAXIMIZED);   //Maximum height of the window.
-            mmiStruct->ptMaxTrackSize = ptPoint;
-        }
-        break;
-
-    case WM_KEYDOWN: {
-
-            /*switch (wParam) {
-
-            case VK_SPACE : {
-                    if (HIBYTE(GetAsyncKeyState(VK_LCONTROL))) {
-                        scrollColor = 0;
-                        SetScrollPos(hWndScroll, SB_CTL, scrollColor, TRUE);
-                        InvalidateRect(hWnd, &rcFoodList, TRUE);
-                        return 0;
-                    }
-                }
-                break;
-            case VK_F1: {
-                    if (HIBYTE(GetAsyncKeyState(VK_LCONTROL))) {
-
-                        SendMessage(hWndList, LB_RESETCONTENT, 0, 0);
-                        foodNumber = 0;
-                        InvalidateRect(hWnd, &rcQuantity, TRUE);
-                        /*fontColor[0] = 255;
-                        fontColor[1] = 255;
-                        fontColor[2] = 255;
-                        InvalidateRect(hWnd, &rcFoodList, TRUE);*/
-              /*      }
-                }
-                break;
-            }*/
-        }
-        break;
-
-    case WM_SETFOCUS: {
-            SetFocus(hWnd);
-        }
-        break;
     case WM_DESTROY: {
             PostQuitMessage(0);
             return 0;
         }
         break;
     }
-
 
     ReleaseDC(hWnd, hdc);
     return DefWindowProc(hWnd,msg,wParam,lParam);
@@ -994,124 +818,3 @@ void setupPen(int stroke, int color[3]) {
 void setupBrush(int color[3]) {
     hBrush = CreateSolidBrush(RGB(color[0], color[1], color[2]));
 }
-
-                /**
-                //Create Scrolls
-                hWndScroll = CreateWindowEx((DWORD)NULL,
-                    TEXT("scrollbar"),
-                    NULL,
-                    WS_CHILD | WS_VISIBLE | SBS_VERT,
-                    315, 40, 25, 150,
-                    hWnd,
-                    (HMENU) ID_SCROLL_BAR,
-                    hInstance,
-                    NULL);
-                SetScrollRange(hWndScroll,SB_CTL, 0, 255, FALSE);
-                SetScrollPos(hWndScroll, SB_CTL, 0, TRUE);
-
-                hWndWidthScroll = CreateWindowEx((DWORD)NULL,
-                    TEXT("scrollbar"),
-                    NULL,
-                    WS_CHILD | WS_VISIBLE | SBS_HORZ,
-                    10, 230, 300, 20,
-                    hWnd, /**
-                //Create Scrolls
-                hWndScroll = CreateWindowEx((DWORD)NULL,
-                    TEXT("scrollbar"),
-                    NULL,
-                    WS_CHILD | WS_VISIBLE | SBS_VERT,
-                    315, 40, 25, 150,
-                    hWnd,
-                    (HMENU)ID_WIDTH_SCROLL,
-                    hInstance,
-                    NULL);
-                SetScrollRange(hWndWidthScroll, SB_CTL, 0, 100, TRUE);
-                SetScrollPos(hWndWidthScroll, SB_CTL, 0, TRUE);
-
-                hWndHeightScroll = CreateWindowEx((DWORD)NULL,
-                    TEXT("scrollbar"),
-                    NULL,
-                    WS_CHILD | WS_VISIBLE | SBS_HORZ,
-                    10, 260, 300, 20,
-                    hWnd,
-                    (HMENU)ID_HEIGHT_SCROLL,
-                    hInstance,
-                    NULL);
-                SetScrollRange(hWndHeightScroll, SB_CTL, 0, 100, TRUE);
-                SetScrollPos(hWndHeightScroll, SB_CTL, 45, TRUE);
-
-                /**
-                * Create ListBox
-                */
-                /**
-                hWndList = CreateWindowEx((DWORD)NULL,
-                    TEXT("listbox"),
-                    "",
-                    WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_AUTOVSCROLL | LBS_STANDARD | WS_BORDER,
-                    10, 40,
-                    300, 100,
-                    hWnd,
-                    (HMENU) IDC_FOOD_LIST,
-                    hInstance,
-                    NULL);
-
-                */
-                /**
-                * Create AddFood Button
-                */
-                /**
-                HFONT hFont = CreateFont(30,0,0,0,FW_DONTCARE,FALSE,TRUE,FALSE,DEFAULT_CHARSET,OUT_OUTLINE_PRECIS,
-                    CLIP_DEFAULT_PRECIS,NULL, VARIABLE_PITCH,TEXT("Impact"));
-
-                HWND hButtonAddFood = CreateWindowEx(NULL,
-                    "BUTTON",
-                    "ADD FOOD",
-                    WS_TABSTOP|WS_VISIBLE|
-                    WS_CHILD|BS_DEFPUSHBUTTON|BS_TOP,
-                    10,
-                    150,
-                    100,
-                    25,
-                    hWnd,
-                    (HMENU)BUTTON_ADD_FOOD,
-                    GetModuleHandle(NULL),
-                    NULL);
-                */
-                /**
-                * Create button ShowFoodNumber
-                */
-                /**
-                HWND hShowFoodNumber = CreateWindowEx(NULL,
-                    "BUTTON",
-                    "Funny",
-                    WS_TABSTOP|WS_VISIBLE|
-                    WS_CHILD|BS_DEFPUSHBUTTON|BS_TOP,
-                    10,
-                    180,
-                    300,
-                    40,
-                    hWnd,
-                    (HMENU)BUTTON_DISPLAY_FOOD_NR,
-                    GetModuleHandle(NULL),
-                    NULL);
-                SendMessage (hShowFoodNumber, WM_SETFONT, WPARAM (hFont), TRUE);
-                */
-                /**
-                * Draw main Input food field
-                */
-                /**
-                hInputFood = CreateWindowEx(
-                    (DWORD)NULL,
-                    TEXT("edit"),
-                    "",
-                    WS_VISIBLE | WS_CHILD | WS_BORDER,
-                    120,
-                    150,
-                    190,
-                    25,
-                    hWnd,
-                    (HMENU)INPUT_TEXT_ADD_FOOD,
-                    GetModuleHandle(NULL),
-                    NULL);
-
-            }*/
