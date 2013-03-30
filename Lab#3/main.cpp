@@ -27,6 +27,21 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void setupPen(int stroke, int color[3]);
 void setupBrush(int color[3]);
 
+void drawLine(POINT coord[4], HDC hdc) {
+    MoveToEx(hdc, coord[0].x, coord[0].y, NULL);
+    LineTo(hdc, coord[1].x, coord[1].y);
+}
+
+void drawCircle(POINT coord[4], HDC hdc) {
+    Ellipse(hdc, coord[0].x, coord[0].y, coord[1].x, coord[1].y);
+}
+
+void drawRectangle(POINT coord[4], HDC hdc) {
+    Rectangle(hdc, coord[0].x, coord[0].y, coord[1].x, coord[1].y);
+}
+void drawBezier(POINT coord[4], HDC hdc) {
+    PolyBezier (hdc, coord, 4);
+}
 
 
 
@@ -37,6 +52,7 @@ int penColor[] = {0, 0, 0};
 int brushColor[] = {255, 255, 255};
 HBRUSH hBrush;
 HPEN hPen;
+POINT coords[4];
 
 /**
 * 0 - Draw mode
@@ -80,11 +96,15 @@ int drawItemMark;
 */
 int rubberMark;
 
+int bezierStage = 0;
+
 
 int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrevInst,LPSTR lpCmdLine,int nShowCmd) {
     MSG msg;
     hInstance = hInst;
 
+    setupPen(1, penColor);
+    setupBrush(brushColor);
 
 
     WNDCLASSEX wClass;
@@ -152,11 +172,13 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     RECT rcPenColor, rcBrushColor;
     RECT rcDrawingArea;
 
+
     SetRect(&rcPenColor, 30, 315, 75, 360);
     SetRect(&rcBrushColor, 85, 315, 130, 360);
     SetRect(&rcDrawingArea, 180, 10, 770, 550);
 
     HDC hdc = GetDC(hWnd);
+
     //static HWNDrcPenColordrawItemMark = 0;
 
 
@@ -407,6 +429,161 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
                 hWnd, (HMENU)0, hInstance, NULL);
         }
         break;
+    case WM_LBUTTONDOWN: {
+
+            if (wParam & MK_LBUTTON) {
+
+                if(eraseMode) {
+                    int centerX = LOWORD (lParam);
+                    int centerY = HIWORD (lParam);
+                    int delta = 5 + (rubberMark * 3);
+                    SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(255, 255, 255)));
+                    SelectObject(hdc, CreateSolidBrush(RGB(255, 255, 255)));
+
+                    coords[0].x = centerX - delta;
+                    coords[0].y = centerY + delta;
+
+                    coords[1].y = centerY - delta;
+                    coords[1].x = centerX + delta;
+
+                    drawRectangle(coords, hdc);
+                    return 0;
+                }
+
+                if (drawItemMark == 3) {
+                    SelectObject(hdc, CreatePen(PS_SOLID, thicknessMark + 1, RGB(255, 255, 255)));
+                    switch (bezierStage) {
+                    case 0:
+                        for (int i = 0; i < 4; i++) {
+                            coords[i].x = LOWORD (lParam);
+                            coords[i].y = HIWORD (lParam);
+                        }
+                        break;
+                    case 1:
+                        drawBezier(coords, hdc);
+                        coords[1].x = LOWORD (lParam);
+                        coords[1].y = HIWORD (lParam);
+                        SelectObject(hdc, hPen);
+                        drawBezier(coords, hdc);
+                        break;
+                    case 2:
+                        drawBezier(coords, hdc);
+                        coords[2].x = LOWORD (lParam);
+                        coords[2].y = HIWORD (lParam);
+                        SelectObject(hdc, hPen);
+                        drawBezier(coords, hdc);
+                        break;
+                    }
+                } else {
+                    coords[0].x = LOWORD (lParam);
+                    coords[0].y = HIWORD (lParam);
+                    coords[1].x = LOWORD (lParam);
+                    coords[1].y = HIWORD (lParam);
+                    bezierStage = 0;
+                }
+            }
+        }
+        break;
+    case WM_LBUTTONUP:{
+        if (drawItemMark == 3) {
+            switch (bezierStage) {
+            case 0:
+                bezierStage = 1;
+                break;
+            case 1:
+                bezierStage = 2;
+                break;
+            case 2:
+                bezierStage = 0;
+                break;
+            }
+        }
+    }
+    break;
+	case WM_MOUSEMOVE: {
+            if (wParam & MK_LBUTTON) {
+                SelectObject(hdc, CreatePen(PS_SOLID, thicknessMark + 1, RGB(255, 255, 255)));
+                SelectObject(hdc, CreateSolidBrush(RGB(255, 255, 255)));
+
+                if(eraseMode) {
+                    int centerX = LOWORD (lParam);
+                    int centerY = HIWORD (lParam);
+                    int delta = 5 + (rubberMark * 3);
+                    SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(255, 255, 255)));
+                    SelectObject(hdc, CreateSolidBrush(RGB(255, 255, 255)));
+
+                    coords[0].x = centerX - delta;
+                    coords[0].y = centerY + delta;
+
+                    coords[1].y = centerY - delta;
+                    coords[1].x = centerX + delta;
+
+                    drawRectangle(coords, hdc);
+                    return 0;
+                }
+
+                switch (drawItemMark) {
+                case 0:{                                // Line
+                        drawLine(coords, hdc);
+                        coords[1].x = LOWORD (lParam);
+                        coords[1].y = HIWORD (lParam);
+                        SelectObject(hdc, hPen);
+                        SelectObject(hdc, hBrush);
+                        drawLine(coords, hdc);
+                    }
+                    break;
+                case 1: {                                // Rectangle
+                        drawRectangle(coords, hdc);
+                        coords[1].x = LOWORD (lParam);
+                        coords[1].y = HIWORD (lParam);
+                        SelectObject(hdc, hPen);
+                        if (checkBoxMark) {
+                            SelectObject(hdc, hBrush);
+                        }
+                        drawRectangle(coords, hdc);
+                    }
+                    break;
+                case 2:{                                // Circle
+                        drawCircle(coords, hdc);
+                        coords[1].x = LOWORD (lParam);
+                        coords[1].y = HIWORD (lParam);
+                        SelectObject(hdc, hPen);
+                        if (checkBoxMark) {
+                            SelectObject(hdc, hBrush);
+                        }
+                        drawCircle(coords, hdc);
+                    }
+                    break;
+                case 3: {                               // Bezier Curve
+                        switch (bezierStage) {
+                        case 0:
+                            drawBezier(coords, hdc);
+                            coords[3].x = LOWORD (lParam);
+                            coords[3].y = HIWORD (lParam);
+                            SelectObject(hdc, hPen);
+                            drawBezier(coords, hdc);
+                            break;
+                        case 1:
+                            drawBezier(coords, hdc);
+                            coords[1].x = LOWORD (lParam);
+                            coords[1].y = HIWORD (lParam);
+                            SelectObject(hdc, hPen);
+                            drawBezier(coords, hdc);
+                            break;
+                        case 2:
+                            drawBezier(coords, hdc);
+                            coords[2].x = LOWORD (lParam);
+                            coords[2].y = HIWORD (lParam);
+                            SelectObject(hdc, hPen);
+                            drawBezier(coords, hdc);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+	    break;
     case WM_PAINT: {
             HDC hdc = BeginPaint(hWnd, &Ps);
             //RECT rcDrawingArea;
@@ -482,6 +659,8 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
             return (LONG) color;*/
         }
         break;
+
+
 
     case WM_COMMAND: {
 
@@ -803,7 +982,7 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam) {
     }
 
 
-
+    ReleaseDC(hWnd, hdc);
     return DefWindowProc(hWnd,msg,wParam,lParam);
 }
 
