@@ -19,7 +19,7 @@ Windows Timer. Animation.
 ## Application Creation Steps
 First I've sketched my whole application. After that I designed a Class for the floating circles. When users cliks hew circles are generated with random speed, size, velocity and colour. When they hit the borders the color and direction is changed. Also there is a Rasta nyan leaving a rainbow trail (btw the applications also has a Rasta nyan theme song). When the user scrolls then the velocity is changed.
 
-![Result images](https://github.com/TUM-FAF/WP-FAF-111-Terman-Sergiu/blob/master/Lab%234/Capture.PNG)
+![Result images](https://github.com/TUM-FAF/WP-FAF-111-Terman-Sergiu/blob/master/Lab%234/Capture.PNG?raw=true)
 
 ## What I've used
 - I've used the brushes
