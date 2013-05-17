@@ -26,20 +26,23 @@ private:
 
     int _personalIndex;
 
+
 protected:
     void randColor();
     int checkQuadran();
 
 public:
+    int _livingTime = 0;
 
     Ball();
+    static const int TIMER_TIME = 28;
     static const int RADIUS_LIMIT_MIN = 7;
     static const int RADIUS_LIMIT_MAX = 30;
 
     static const int VELOCITY_CRITIC_LIMIT_MIN = 5;
     static const int VELOCITY_CRITIC_LIMIT_MAX = 150;
     static const int VELOCITY_LIMIT_MIN = 2;
-    static const int VELOCITY_LIMIT_MAX = 10;
+    static const int VELOCITY_LIMIT_MAX = 5;
 
     static const int LIMIT_LEFT = 10;
     static const int LIMIT_TOP = 10;
@@ -53,11 +56,15 @@ public:
 
     void newPos();
     void reshapeBoundaries();
+    void reshapeInteractions();
     void drawBall(HDC hdc);
+    void drawGhost(HDC hdc);
+    int ballsAngle(int xPos, int yPos);
+    bool interactBall(Ball &ball);
 
     static double toRadians(int degrees);
 };
 
-static std::vector<Ball> balls;
+static std::vector<Ball*> balls;
 
 #endif
