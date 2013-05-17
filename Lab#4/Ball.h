@@ -8,6 +8,8 @@
 #include <time.h>
 #include <vector>
 #include <stdlib.h>
+#include <stdio.h>
+#include <mmsystem.h>
 #include <math.h>
 
 class Ball {
@@ -33,9 +35,10 @@ protected:
 
 public:
     int _livingTime = 0;
-
+    int TIMER_TIME;
     Ball();
-    static const int TIMER_TIME = 28;
+    Ball(int timer_time);
+
     static const int RADIUS_LIMIT_MIN = 7;
     static const int RADIUS_LIMIT_MAX = 30;
 
@@ -45,9 +48,9 @@ public:
     static const int VELOCITY_LIMIT_MAX = 5;
 
     static const int LIMIT_LEFT = 10;
-    static const int LIMIT_TOP = 10;
-    static const int LIMIT_RIGHT = 770;
-    static const int LIMIT_BOTTOM = 550;
+    static const int LIMIT_TOP = 190;
+    static const int LIMIT_RIGHT = 1340;
+    static const int LIMIT_BOTTOM = 690;
 
     static const int QUADRAN_1 = 1;
     static const int QUADRAN_2 = 1;

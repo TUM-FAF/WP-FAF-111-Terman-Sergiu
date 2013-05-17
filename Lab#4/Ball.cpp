@@ -16,6 +16,19 @@ Ball::Ball() {
     randColor();
 }
 
+Ball::Ball(int timer_time) {
+    _radius = rand() % RADIUS_LIMIT_MAX + RADIUS_LIMIT_MIN;
+    _xPos_old = (LIMIT_LEFT + LIMIT_RIGHT) / 2;
+    _yPos_old = (LIMIT_TOP + LIMIT_BOTTOM) / 2;
+
+    //srand (time(NULL));
+    _velocity = rand() % VELOCITY_LIMIT_MAX + VELOCITY_LIMIT_MIN;
+    //srand (time(NULL));
+    _angle = rand() % 360;
+    randColor();
+    TIMER_TIME = timer_time;
+}
+
 /**
 * Randomises the color of the ball
 */
