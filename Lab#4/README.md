@@ -17,18 +17,20 @@ Windows Timer. Animation.
 - Animate a Nyan Cat that leaves a rainbow tail (Math.floor(+30% for task with interacting objects))
 
 ## Application Creation Steps
-First of all I've sketched my laboratory work on a paper. Designed all the buttons elements to controll the drawing. After that I've added the elments. Then I've setted their functionality step by step. And in the end I've Added the properties to draw stuff.
+First I've sketched my whole application. After that I designed a Class for the floating circles. When users cliks hew circles are generated with random speed, size, velocity and colour. When they hit the borders the color and direction is changed. Also there is a Rasta nyan leaving a rainbow trail (btw the applications also has a Rasta nyan theme song). When the user scrolls then the velocity is changed.
 
-![Result images](https://github.com/TUM-FAF/WP-FAF-111-Terman-Sergiu/blob/master/Lab%233/result.PNG?raw=true)
+![Result images](https://github.com/TUM-FAF/WP-FAF-111-Terman-Sergiu/blob/master/Lab%234/Capture.PNG)
 
 ## What I've used
 - I've used the brushes
+- Ellipse function
 - Rectangle function
-- Elipse function
 - PolyBezier function
-- Simple line funtctions
+- Timer
+- Bitmaps
 
-The process of drawing is done only in the specifiend are. The program forbids you to draw in other place. Also you have the oportunity to select the color. and the thickness of the line. And you can draw objects filled with color or with background color.
+The process was really simple. The main problem was to design the class that will do all the stuff. Then combining simple functions I was able to create something more comlex.
 
 ## Conclusion
-This lab was pretty easy as long as you know what you want to do. I've concluded that in order to make something you have to sketch the work, create a list of tasks and follow them step by step. In the end to make something to draw was pretty fun. Even if sometimes was a pain with the drawing bugs.
+In this lab I first used OOP in winapi. It is pretty cool, because you put all funtcionalities with the class. Combining simple functions in a class is awesome. In main file you only use obejcts. Drawing the Rasta nyan was not included in my class. It was drawn manual.
+(The lab is under time destorsion)
